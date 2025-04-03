@@ -12,39 +12,17 @@ CORS(app)  # Enable CORS for all routes
 # Initialize the LLM
 llm = ChatOpenAI(model="gpt-3.5-turbo")
 
-# SQL generation template based on database type
-sql_prompt_template = """
-You are a SQL expert. Given the following database schema and a question, generate the most efficient SQL query to answer the question.
-The query should be optimized for the specified database type.
-
-Database Schema:
-{schema}
-
-Database Type: {dbms_type}
-
-User Question: {question}
-
-Return only the SQL query without any additional text or explanations.
-Make sure the SQL syntax is correct for {dbms_type}.
-"""
-
-# Output parser
-output_parser = StrOutputParser()
-
-# Create the prompt from the template
-prompt = PromptTemplate(
-    template=sql_prompt_template,
-    input_variables=["schema", "dbms_type", "question"]
-)
-
-# Create the LangChain chain
-chain = prompt | llm | output_parser
+# ... keep existing code (SQL prompt template and chain setup)
 
 @app.route('/generate-sql', methods=['POST'])
 def generate_sql():
+    print("Received request to /generate-sql")  # Debug log
+    
     data = request.json
+    print(f"Request data: {data}")  # Debug log
     
     if not data or 'schema' not in data or 'question' not in data or 'dbms_type' not in data:
+        print("Missing required parameters")  # Debug log
         return jsonify({"error": "Missing required parameters"}), 400
     
     try:
@@ -64,13 +42,21 @@ def generate_sql():
         
         explanation = ChatOpenAI(model="gpt-3.5-turbo").invoke(explanation_prompt).content
         
+        print(f"Generated SQL: {sql_query}")  # Debug log
         return jsonify({
             "sql": sql_query,
             "explanation": explanation
         })
     
     except Exception as e:
+        print(f"Error: {str(e)}")  # Debug log
         return jsonify({"error": str(e)}), 500
 
+@app.route('/')
+def health_check():
+    return "Server is running!"
+
 if __name__ == '__main__':
+    print("Starting server on http://localhost:5000")  # Debug log
     app.run(host='0.0.0.0', port=5000, debug=True)
+
