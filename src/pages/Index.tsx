@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import SchemaInput from '@/components/SchemaInput';
 import QueryInput from '@/components/QueryInput';
 import SqlResult from '@/components/SqlResult';
+import DbmsSelector, { DbmsType } from '@/components/DbmsSelector';
 import { useToast } from '@/components/ui/use-toast';
 
 const Index: React.FC = () => {
@@ -11,6 +12,7 @@ const Index: React.FC = () => {
   const [generatedSql, setGeneratedSql] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [selectedDbms, setSelectedDbms] = useState<DbmsType>('mysql');
   const { toast } = useToast();
 
   const generateSql = async (question: string) => {
@@ -33,27 +35,83 @@ const Index: React.FC = () => {
         let mockSql = '';
         let mockExplanation = '';
         
+        // Generate different SQL based on the selected DBMS
         if (schema.toLowerCase().includes('users') && question.toLowerCase().includes('join')) {
-          mockSql = `SELECT u.name, u.email, u.created_at
+          if (selectedDbms === 'mysql' || selectedDbms === 'postgresql') {
+            mockSql = `SELECT u.name, u.email, u.created_at
 FROM users u
 WHERE u.created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH)
 ORDER BY u.created_at DESC;`;
-          mockExplanation = "This query selects the name, email, and creation date of users who joined in the last month, ordered by most recent first.";
+          } else if (selectedDbms === 'oracle') {
+            mockSql = `SELECT u.name, u.email, u.created_at
+FROM users u
+WHERE u.created_at >= ADD_MONTHS(TRUNC(SYSDATE), -1)
+ORDER BY u.created_at DESC;`;
+          } else if (selectedDbms === 'sqlserver') {
+            mockSql = `SELECT u.name, u.email, u.created_at
+FROM users u
+WHERE u.created_at >= DATEADD(month, -1, CONVERT(date, GETDATE()))
+ORDER BY u.created_at DESC;`;
+          } else if (selectedDbms === 'sqlite') {
+            mockSql = `SELECT u.name, u.email, u.created_at
+FROM users u
+WHERE u.created_at >= date('now', '-1 month')
+ORDER BY u.created_at DESC;`;
+          }
+          mockExplanation = `This query selects the name, email, and creation date of users who joined in the last month, ordered by most recent first. Syntax is optimized for ${selectedDbms.toUpperCase()}.`;
         } else if (schema.toLowerCase().includes('orders')) {
-          mockSql = `SELECT c.name, SUM(o.amount) as total_spent
+          if (selectedDbms === 'mysql' || selectedDbms === 'postgresql') {
+            mockSql = `SELECT c.name, SUM(o.amount) as total_spent
 FROM customers c
 JOIN orders o ON c.id = o.customer_id
 GROUP BY c.id, c.name
 ORDER BY total_spent DESC
 LIMIT 10;`;
-          mockExplanation = "This query finds the top 10 customers by total amount spent, joining the customers and orders tables.";
+          } else if (selectedDbms === 'oracle') {
+            mockSql = `SELECT * FROM (
+  SELECT c.name, SUM(o.amount) as total_spent
+  FROM customers c
+  JOIN orders o ON c.id = o.customer_id
+  GROUP BY c.id, c.name
+  ORDER BY total_spent DESC
+)
+WHERE ROWNUM <= 10;`;
+          } else if (selectedDbms === 'sqlserver') {
+            mockSql = `SELECT TOP 10 c.name, SUM(o.amount) as total_spent
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id, c.name
+ORDER BY total_spent DESC;`;
+          } else if (selectedDbms === 'sqlite') {
+            mockSql = `SELECT c.name, SUM(o.amount) as total_spent
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id, c.name
+ORDER BY total_spent DESC
+LIMIT 10;`;
+          }
+          mockExplanation = `This query finds the top 10 customers by total amount spent, joining the customers and orders tables. Syntax is optimized for ${selectedDbms.toUpperCase()}.`;
         } else {
-          mockSql = `-- Generated SQL based on your schema
+          const tableName = schema.match(/CREATE\s+TABLE\s+(\w+)/i)?.[1] || 'table_name';
+          if (selectedDbms === 'mysql' || selectedDbms === 'postgresql' || selectedDbms === 'sqlite') {
+            mockSql = `-- Generated SQL for ${selectedDbms.toUpperCase()} based on your schema
 SELECT *
-FROM ${schema.match(/CREATE\s+TABLE\s+(\w+)/i)?.[1] || 'table_name'}
+FROM ${tableName}
 WHERE 1=1
 LIMIT 10;`;
-          mockExplanation = "This is a basic query to show some sample data from your tables. Refine your question to get more specific SQL.";
+          } else if (selectedDbms === 'oracle') {
+            mockSql = `-- Generated SQL for ORACLE based on your schema
+SELECT *
+FROM ${tableName}
+WHERE 1=1
+AND ROWNUM <= 10;`;
+          } else if (selectedDbms === 'sqlserver') {
+            mockSql = `-- Generated SQL for SQL SERVER based on your schema
+SELECT TOP 10 *
+FROM ${tableName}
+WHERE 1=1;`;
+          }
+          mockExplanation = `This is a basic query to show some sample data from your tables in ${selectedDbms.toUpperCase()} format. Refine your question to get more specific SQL.`;
         }
         
         setGeneratedSql(mockSql);
@@ -102,7 +160,10 @@ LIMIT 10;`;
 
       <main className="container px-4 sm:px-6 py-6 space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
-          <SchemaInput schema={schema} setSchema={setSchema} />
+          <div className="space-y-6">
+            <SchemaInput schema={schema} setSchema={setSchema} />
+            <DbmsSelector selectedDbms={selectedDbms} onDbmsChange={setSelectedDbms} />
+          </div>
           <QueryInput onGenerateQuery={generateSql} isGenerating={isGenerating} />
         </div>
         
@@ -112,7 +173,7 @@ LIMIT 10;`;
               <div className="h-2.5 w-2.5 rounded-full bg-sqlblue-500"></div>
               <div className="h-2.5 w-2.5 rounded-full bg-sqlblue-500"></div>
               <div className="h-2.5 w-2.5 rounded-full bg-sqlblue-500"></div>
-              <span className="text-muted-foreground">Generating your SQL...</span>
+              <span className="text-muted-foreground">Generating your SQL for {selectedDbms.toUpperCase()}...</span>
             </div>
           </div>
         )}
