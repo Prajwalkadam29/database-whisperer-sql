@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom SQL Whisperer theme colors
+				sqlblue: {
+					DEFAULT: '#4C6EF5',
+					50: '#E7EBFE',
+					100: '#D2DBFD',
+					200: '#A9BAF9',
+					300: '#8099F6',
+					400: '#6683F5',
+					500: '#4C6EF5',
+					600: '#1E47F2',
+					700: '#0D32D6',
+					800: '#0A27A8',
+					900: '#081C7A',
+					950: '#061363'
+				},
+				codeblock: {
+					DEFAULT: '#1E1E3F',
+					border: '#2D2B55'
 				}
 			},
 			borderRadius: {
@@ -84,11 +104,30 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				'fade-out': {
+					'0%': { opacity: '1' },
+					'100%': { opacity: '0' }
+				},
+				'pulse-light': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.7'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'fade-out': 'fade-out 0.3s ease-out',
+				'pulse-light': 'pulse-light 1.5s ease-in-out infinite'
 			}
 		}
 	},
