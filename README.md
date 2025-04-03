@@ -1,73 +1,69 @@
-# Welcome to your Lovable project
 
-## Project info
+# SQL Whisperer with LangChain Integration
 
-**URL**: https://lovable.dev/projects/2e4cdcce-9c81-4f96-ba35-99744a0a10c5
+SQL Whisperer is a web application that transforms natural language questions into optimized SQL queries for different database management systems.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Convert natural language to SQL queries
+- Support for multiple database types (MySQL, PostgreSQL, Oracle, SQL Server, SQLite)
+- Schema-aware query generation
+- Detailed SQL explanations
 
-**Use Lovable**
+## Setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2e4cdcce-9c81-4f96-ba35-99744a0a10c5) and start prompting.
+### Frontend (React)
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Install dependencies:
+   ```
+   npm install
+   ```
 
-**Use your preferred IDE**
+2. Start the development server:
+   ```
+   npm run dev
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend (Python with LangChain)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
 
-Follow these steps:
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Activate the virtual environment:
+   - Windows: `venv\Scripts\activate`
+   - Mac/Linux: `source venv/bin/activate`
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. Install requirements:
+   ```
+   pip install -r requirements.txt
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. Set up your OpenAI API key:
+   ```
+   export OPENAI_API_KEY=your_api_key_here
+   ```
+   
+   Or create a .env file in the backend directory:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+6. Run the Flask server:
+   ```
+   python langchain_sql_service.py
+   ```
 
-**Edit a file directly in GitHub**
+## Usage
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/2e4cdcce-9c81-4f96-ba35-99744a0a10c5) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Start both the frontend and backend servers
+2. Enter your database schema in the Schema input
+3. Select your database type
+4. Ask a question about your data
+5. Get the generated SQL query optimized for your database

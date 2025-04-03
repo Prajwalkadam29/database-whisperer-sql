@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
-import { Toaster } from '@/components/ui/toaster';
 import SchemaInput from '@/components/SchemaInput';
 import QueryInput from '@/components/QueryInput';
 import SqlResult from '@/components/SqlResult';
 import DbmsSelector, { DbmsType } from '@/components/DbmsSelector';
 import { useToast } from '@/components/ui/use-toast';
+import { generateSqlWithLangchain } from '@/services/langchainService';
 
 const Index: React.FC = () => {
   const [schema, setSchema] = useState<string>('');
@@ -28,102 +27,22 @@ const Index: React.FC = () => {
     setIsGenerating(true);
     
     try {
-      // In a real implementation, this would call an API endpoint
-      // For this demo, we're simulating the generated SQL with a timeout
-      setTimeout(() => {
-        // This is just a mock implementation for demonstration purposes
-        let mockSql = '';
-        let mockExplanation = '';
-        
-        // Generate different SQL based on the selected DBMS
-        if (schema.toLowerCase().includes('users') && question.toLowerCase().includes('join')) {
-          if (selectedDbms === 'mysql' || selectedDbms === 'postgresql') {
-            mockSql = `SELECT u.name, u.email, u.created_at
-FROM users u
-WHERE u.created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH)
-ORDER BY u.created_at DESC;`;
-          } else if (selectedDbms === 'oracle') {
-            mockSql = `SELECT u.name, u.email, u.created_at
-FROM users u
-WHERE u.created_at >= ADD_MONTHS(TRUNC(SYSDATE), -1)
-ORDER BY u.created_at DESC;`;
-          } else if (selectedDbms === 'sqlserver') {
-            mockSql = `SELECT u.name, u.email, u.created_at
-FROM users u
-WHERE u.created_at >= DATEADD(month, -1, CONVERT(date, GETDATE()))
-ORDER BY u.created_at DESC;`;
-          } else if (selectedDbms === 'sqlite') {
-            mockSql = `SELECT u.name, u.email, u.created_at
-FROM users u
-WHERE u.created_at >= date('now', '-1 month')
-ORDER BY u.created_at DESC;`;
-          }
-          mockExplanation = `This query selects the name, email, and creation date of users who joined in the last month, ordered by most recent first. Syntax is optimized for ${selectedDbms.toUpperCase()}.`;
-        } else if (schema.toLowerCase().includes('orders')) {
-          if (selectedDbms === 'mysql' || selectedDbms === 'postgresql') {
-            mockSql = `SELECT c.name, SUM(o.amount) as total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-GROUP BY c.id, c.name
-ORDER BY total_spent DESC
-LIMIT 10;`;
-          } else if (selectedDbms === 'oracle') {
-            mockSql = `SELECT * FROM (
-  SELECT c.name, SUM(o.amount) as total_spent
-  FROM customers c
-  JOIN orders o ON c.id = o.customer_id
-  GROUP BY c.id, c.name
-  ORDER BY total_spent DESC
-)
-WHERE ROWNUM <= 10;`;
-          } else if (selectedDbms === 'sqlserver') {
-            mockSql = `SELECT TOP 10 c.name, SUM(o.amount) as total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-GROUP BY c.id, c.name
-ORDER BY total_spent DESC;`;
-          } else if (selectedDbms === 'sqlite') {
-            mockSql = `SELECT c.name, SUM(o.amount) as total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-GROUP BY c.id, c.name
-ORDER BY total_spent DESC
-LIMIT 10;`;
-          }
-          mockExplanation = `This query finds the top 10 customers by total amount spent, joining the customers and orders tables. Syntax is optimized for ${selectedDbms.toUpperCase()}.`;
-        } else {
-          const tableName = schema.match(/CREATE\s+TABLE\s+(\w+)/i)?.[1] || 'table_name';
-          if (selectedDbms === 'mysql' || selectedDbms === 'postgresql' || selectedDbms === 'sqlite') {
-            mockSql = `-- Generated SQL for ${selectedDbms.toUpperCase()} based on your schema
-SELECT *
-FROM ${tableName}
-WHERE 1=1
-LIMIT 10;`;
-          } else if (selectedDbms === 'oracle') {
-            mockSql = `-- Generated SQL for ORACLE based on your schema
-SELECT *
-FROM ${tableName}
-WHERE 1=1
-AND ROWNUM <= 10;`;
-          } else if (selectedDbms === 'sqlserver') {
-            mockSql = `-- Generated SQL for SQL SERVER based on your schema
-SELECT TOP 10 *
-FROM ${tableName}
-WHERE 1=1;`;
-          }
-          mockExplanation = `This is a basic query to show some sample data from your tables in ${selectedDbms.toUpperCase()} format. Refine your question to get more specific SQL.`;
-        }
-        
-        setGeneratedSql(mockSql);
-        setExplanation(mockExplanation);
-        setIsGenerating(false);
-      }, 1500); // Simulating API delay
+      // Call the LangChain service
+      const response = await generateSqlWithLangchain({
+        schema,
+        question,
+        dbmsType: selectedDbms
+      });
+      
+      setGeneratedSql(response.sql);
+      setExplanation(response.explanation);
     } catch (error) {
       toast({
         title: "Error generating SQL",
-        description: "There was a problem generating the SQL query",
+        description: error instanceof Error ? error.message : "There was a problem generating the SQL query",
         variant: "destructive",
       });
+    } finally {
       setIsGenerating(false);
     }
   };
